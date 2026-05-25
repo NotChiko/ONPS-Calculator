@@ -99,7 +99,6 @@
             transition: border-color 0.2s, box-shadow 0.2s;
         }
 
-        /* Highlight border glow on focus/interaction */
         .input-wrapper:focus-within {
             border-color: var(--accent-orange);
             box-shadow: 0 0 15px var(--accent-orange-dim);
@@ -155,7 +154,7 @@
         }
 
         .outputs-grid {
-            display: none; /* Controlled dynamically by JS */
+            display: none;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
             margin-bottom: 24px;
@@ -320,13 +319,11 @@
         const autoBypassDisplay = document.getElementById('autoBypassDisplay');
         const statusText = document.getElementById('statusText');
 
-        // Track pristine first-load sequence
         let isInitialLoad = true;
 
         function handleCalculationUpdate() {
             const rawVal = inputElement.value.trim();
             
-            // State: Completely clear/empty field
             if (rawVal === "") {
                 outputsGrid.style.display = 'none';
                 if (isInitialLoad) {
@@ -337,10 +334,8 @@
                 return;
             }
 
-            // User interacted: pristine lifecycle state concluded
             isInitialLoad = false;
 
-            // Strict Validation: Deny decimals (dot/comma) or standard text strings
             if (rawVal.includes('.') || rawVal.includes(',') || !/^\d+$/.test(rawVal)) {
                 errorBanner.style.display = 'flex';
                 outputsGrid.style.display = 'none';
@@ -349,25 +344,19 @@
 
             const val = parseInt(rawVal, 10);
             
-            // Range parameters check (950-1500)
             if (isNaN(val) || val < 950 || val > 1500) {
                 errorBanner.style.display = 'flex';
                 outputsGrid.style.display = 'none';
                 return;
             }
 
-            // Valid calculation target state confirmed
             errorBanner.style.display = 'none';
             outputsGrid.style.display = 'grid';
 
-            // 1. Calculate dynamic Thermal Power using formula
             const thermalPower = val + 2700;
 
-            // 2. Round input to nearest 10 via true mathematical rounding rules
-            // (e.g., 1005-1014 rounds to 1010 -> 517; 1015-1024 rounds to 1020 -> 522)
             const lookupKey = Math.round(val / 10) * 10;
-
-            // 3. Complete array matching structural spreadsheet rows
+            
             const autoBypassTable = {
                 950: 487,  960: 492,  970: 497,  980: 502,  990: 507,
                 1000: 512, 1010: 517, 1020: 522, 1030: 527, 1040: 532,
@@ -383,10 +372,8 @@
                 1480: 750, 1490: 750, 1500: 750
             };
 
-            // 4. Extract explicit data point match from lookup key
             const autoBypass = autoBypassTable[lookupKey] || 0;
 
-            // Update UI elements smoothly
             thermalPowerDisplay.innerText = Math.round(thermalPower).toLocaleString();
             autoBypassDisplay.innerText = Math.round(autoBypass).toLocaleString();
         }
@@ -405,10 +392,8 @@
             });
         }
 
-        // Live input character change event bindings
         inputElement.addEventListener('input', handleCalculationUpdate);
         
-        // Initial configuration pass
         handleCalculationUpdate();
     </script>
 </body>
