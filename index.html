@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>One Deaerator Strategy Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0b0c0d;
+            --card-bg: #111215;
+            --accent-orange: #e56a16;
+            --accent-orange-dim: rgba(229, 106, 22, 0.15);
+            --text-main: #ffffff;
+            --text-muted: #626770;
+            --border-color: #1f232b;
+            --error-red: #da3737;
+            --error-bg: rgba(218, 55, 55, 0.03);
+            --error-border: #3a1c1c;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Space Grotesk', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.006) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.006) 1px, transparent 1px);
+            background-size: 32px 32px;
+        }
+
+        .dashboard {
+            width: 100%;
+            max-width: 900px;
+            background-color: rgba(17, 18, 21, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            backdrop-filter: blur(12px);
+        }
+
+        .strategy-header {
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.2em;
+            color: var(--accent-orange);
+            font-weight: 700;
+            margin-bottom: 32px; /* Balanced spacing directly below header title */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .strategy-header::before {
+            content: "•";
+            font-size: 1.2rem;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .input-label svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--accent-orange);
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            background-color: #060708;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        /* Highlight border glow on focus/interaction */
+        .input-wrapper:focus-within {
+            border-color: var(--accent-orange);
+            box-shadow: 0 0 15px var(--accent-orange-dim);
+        }
+
+        .input-field {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-family: 'Space Mono', monospace;
+            font-size: 1.3rem;
+            padding: 16px;
+            font-weight: bold;
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+            opacity: 0.5;
+        }
+
+        .range-hint {
+            position: absolute;
+            right: 16px;
+            color: var(--text-muted);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+
+        .error-banner {
+            display: none;
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-border);
+            border-radius: 8px;
+            padding: 16px;
+            color: var(--error-red);
+            font-size: 0.95rem;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+
+        .error-banner svg {
+            width: 16px;
+            height: 16px;
+            fill: none;
+            stroke: var(--error-red);
+            stroke-width: 2;
+            flex-shrink: 0;
+        }
+
+        .outputs-grid {
+            display: none; /* Controlled dynamically by JS */
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 600px) {
+            .outputs-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-label {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .card-value-container {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .card-value {
+            font-family: 'Space Mono', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .card-value.orange {
+            color: var(--accent-orange);
+        }
+
+        .card-value.white {
+            color: var(--text-main);
+        }
+
+        .card-unit {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .copy-btn {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            margin-left: 6px;
+            border-radius: 4px;
+        }
+
+        .copy-btn svg {
+            width: 15px;
+            height: 15px;
+            stroke: var(--text-muted);
+            fill: none;
+        }
+
+        .copy-btn:hover svg {
+            stroke: var(--text-main);
+        }
+
+        .status-footer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 24px;
+            margin-top: 12px;
+        }
+
+        .status-footer svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-width: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard">
+        <div class="strategy-header">One Deaerator Strategy</div>
+
+        <div class="input-group">
+            <div class="input-label">
+                <svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                Grid Demand (MW)
+            </div>
+            <div class="input-wrapper">
+                <input type="text" id="gridDemand" class="input-field" placeholder="e.g. 1200">
+                <div class="range-hint">950–1500</div>
+            </div>
+        </div>
+
+        <div id="errorBanner" class="error-banner">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Grid demand must be 950–1500 MW.
+        </div>
+
+        <div id="outputsGrid" class="outputs-grid">
+            <div class="card">
+                <div class="card-label">Thermal Power</div>
+                <div class="card-value-container">
+                    <span id="thermalPowerDisplay" class="card-value orange">0</span>
+                    <span class="card-unit">MWt</span>
+                    <button class="copy-btn" onclick="copyToClipboard('thermalPowerDisplay')">
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-label">Auto-Bypass</div>
+                <div class="card-value-container">
+                    <span id="autoBypassDisplay" class="card-value white">0</span>
+                    <button class="copy-btn" onclick="copyToClipboard('autoBypassDisplay')">
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="status-footer">
+            <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+            </svg>
+            <div id="statusText">Results will appear here</div>
+        </div>
+    </div>
+
+    <script>
+        const inputElement = document.getElementById('gridDemand');
+        const errorBanner = document.getElementById('errorBanner');
+        const outputsGrid = document.getElementById('outputsGrid');
+        const thermalPowerDisplay = document.getElementById('thermalPowerDisplay');
+        const autoBypassDisplay = document.getElementById('autoBypassDisplay');
+        const statusText = document.getElementById('statusText');
+
+        // Track pristine first-load sequence
+        let isInitialLoad = true;
+
+        function handleCalculationUpdate() {
+            const rawVal = inputElement.value.trim();
+            
+            // State: Completely clear/empty field
+            if (rawVal === "") {
+                outputsGrid.style.display = 'none';
+                if (isInitialLoad) {
+                    errorBanner.style.display = 'none';
+                } else {
+                    errorBanner.style.display = 'flex';
+                }
+                return;
+            }
+
+            // User interacted: pristine lifecycle state concluded
+            isInitialLoad = false;
+
+            // Strict Validation: Deny decimals (dot/comma) or standard text strings
+            if (rawVal.includes('.') || rawVal.includes(',') || !/^\d+$/.test(rawVal)) {
+                errorBanner.style.display = 'flex';
+                outputsGrid.style.display = 'none';
+                return;
+            }
+
+            const val = parseInt(rawVal, 10);
+            
+            // Range parameters check (950-1500)
+            if (isNaN(val) || val < 950 || val > 1500) {
+                errorBanner.style.display = 'flex';
+                outputsGrid.style.display = 'none';
+                return;
+            }
+
+            // Valid calculation target state confirmed
+            errorBanner.style.display = 'none';
+            outputsGrid.style.display = 'grid';
+
+            // 1. Calculate dynamic Thermal Power using formula
+            const thermalPower = val + 2700;
+
+            // 2. Round input to nearest 10 via true mathematical rounding rules
+            // (e.g., 1005-1014 rounds to 1010 -> 517; 1015-1024 rounds to 1020 -> 522)
+            const lookupKey = Math.round(val / 10) * 10;
+
+            // 3. Complete array matching structural spreadsheet rows
+            const autoBypassTable = {
+                950: 487,  960: 492,  970: 497,  980: 502,  990: 507,
+                1000: 512, 1010: 517, 1020: 522, 1030: 527, 1040: 532,
+                1050: 537, 1060: 542, 1070: 547, 1080: 552, 1090: 557,
+                1100: 562, 1110: 567, 1120: 572, 1130: 577, 1140: 582,
+                1150: 587, 1160: 592, 1170: 597, 1180: 602, 1190: 607,
+                1200: 612, 1210: 617, 1220: 622, 1230: 627, 1240: 632,
+                1250: 637, 1260: 642, 1270: 647, 1280: 652, 1290: 657,
+                1300: 662, 1310: 667, 1320: 672, 1330: 677, 1340: 682,
+                1350: 687, 1360: 692, 1370: 697, 1380: 702, 1390: 707,
+                1400: 712, 1410: 717, 1420: 722, 1430: 727, 1440: 732,
+                1450: 737, 1460: 742, 1470: 747, 
+                1480: 750, 1490: 750, 1500: 750
+            };
+
+            // 4. Extract explicit data point match from lookup key
+            const autoBypass = autoBypassTable[lookupKey] || 0;
+
+            // Update UI elements smoothly
+            thermalPowerDisplay.innerText = Math.round(thermalPower).toLocaleString();
+            autoBypassDisplay.innerText = Math.round(autoBypass).toLocaleString();
+        }
+
+        function copyToClipboard(elementId) {
+            const targetText = document.getElementById(elementId).innerText.replace(/,/g, '');
+            navigator.clipboard.writeText(targetText).then(() => {
+                const baseText = statusText.innerText;
+                statusText.innerText = `Copied value (${targetText}) successfully`;
+                statusText.style.color = "var(--accent-orange)";
+                
+                setTimeout(() => {
+                    statusText.innerText = baseText;
+                    statusText.style.color = "var(--text-muted)";
+                }, 1800);
+            });
+        }
+
+        // Live input character change event bindings
+        inputElement.addEventListener('input', handleCalculationUpdate);
+        
+        // Initial configuration pass
+        handleCalculationUpdate();
+    </script>
+</body>
+</html>
